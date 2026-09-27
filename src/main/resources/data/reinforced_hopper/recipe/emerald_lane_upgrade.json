@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "E": "minecraft:emerald",
+    "R": "minecraft:redstone"
+  },
+  "pattern": [
+    "IEI",
+    "ERE",
+    "IEI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "reinforced_hopper:emerald_lane_upgrade"
+  }
+}

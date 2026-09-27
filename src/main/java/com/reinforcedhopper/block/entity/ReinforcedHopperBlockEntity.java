@@ -81,13 +81,16 @@ public class ReinforcedHopperBlockEntity extends LootableContainerBlockEntity im
 	public int getChannelCount() {
 		ItemStack blockStack = getBlockUpgrade();
 		if (!blockStack.isEmpty()) {
-			if (blockStack.isOf(Items.NETHERITE_BLOCK)) {
+			if (blockStack.getItem() instanceof com.reinforcedhopper.item.LaneUpgradeItem laneItem) {
+				return laneItem.getLanes();
+			}
+			if (blockStack.isOf(ModItems.NETHERITE_LANE_UPGRADE)) {
 				return 4;
 			}
-			if (blockStack.isOf(Items.DIAMOND_BLOCK)) {
-				return 2;
+			if (blockStack.isOf(ModItems.DIAMOND_LANE_UPGRADE)) {
+				return 3;
 			}
-			if (blockStack.isOf(Items.EMERALD_BLOCK)) {
+			if (blockStack.isOf(ModItems.EMERALD_LANE_UPGRADE)) {
 				return 2;
 			}
 		}
@@ -95,17 +98,7 @@ public class ReinforcedHopperBlockEntity extends LootableContainerBlockEntity im
 	}
 
 	public int getCooldownDuration() {
-		int cooldown = isUpgraded() ? ModConfig.INSTANCE.upgradedCooldownTicks : ModConfig.INSTANCE.baseCooldownTicks;
-		ItemStack blockStack = getBlockUpgrade();
-		// Emerald block: 5% speed bonus (1 extra tick off every 20 transfers)
-		if (blockStack.isOf(Items.EMERALD_BLOCK)) {
-			this.transferCounter++;
-			if (this.transferCounter >= 20) {
-				this.transferCounter = 0;
-				cooldown = Math.max(1, cooldown - 1);
-			}
-		}
-		return cooldown;
+		return isUpgraded() ? ModConfig.INSTANCE.upgradedCooldownTicks : ModConfig.INSTANCE.baseCooldownTicks;
 	}
 
 	@Override

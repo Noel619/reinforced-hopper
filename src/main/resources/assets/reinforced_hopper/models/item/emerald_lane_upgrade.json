@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "reinforced_hopper:item/emerald_lane_upgrade"
+  }
+}

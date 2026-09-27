@@ -39,12 +39,12 @@ public class ReinforcedHopperScreen extends HandledScreen<ReinforcedHopperScreen
 			}
 		}
 
-		// Slot 8: Block Multi-Lane Upgrade Slot (Emerald, Diamond, Netherite Block)
+		// Slot 8: Lane Upgrade Slot (Emerald, Diamond, Netherite Lane Upgrades)
 		int blockSlotX = originX + 155;
 		int blockSlotY = originY + 20;
 		if (mouseX >= blockSlotX && mouseX < blockSlotX + 16 && mouseY >= blockSlotY && mouseY < blockSlotY + 16) {
 			if (this.handler.getSlot(ReinforcedHopperScreenHandler.BLOCK_UPGRADE_SLOT_INDEX).getStack().isEmpty()) {
-				context.drawTooltip(this.textRenderer, Text.translatable("gui.reinforced_hopper.block_slot").formatted(Formatting.GREEN), mouseX, mouseY);
+				context.drawTooltip(this.textRenderer, Text.translatable("gui.reinforced_hopper.lane_slot").formatted(Formatting.GREEN), mouseX, mouseY);
 			}
 		}
 	}

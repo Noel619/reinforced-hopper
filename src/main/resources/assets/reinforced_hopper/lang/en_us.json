@@ -4,10 +4,16 @@
   "block.reinforced_hopper.inverted_reinforced_hopper": "Inverted Reinforced Hopper",
   "item.reinforced_hopper.inverted_reinforced_hopper": "Inverted Reinforced Hopper",
   "item.reinforced_hopper.diamond_upgrade": "Reinforced Speed Upgrade",
-  "item.reinforced_hopper.diamond_upgrade.tooltip": "Insert into a Reinforced Hopper to boost its speed to 3x!",
+  "item.reinforced_hopper.diamond_upgrade.tooltip": "Place in a Reinforced Hopper to triple its speed (x3)!",
+  "item.reinforced_hopper.emerald_lane_upgrade": "Emerald Lane Upgrade",
+  "item.reinforced_hopper.emerald_lane_upgrade.tooltip": "Enables 2 simultaneous transfer lanes for distinct items.",
+  "item.reinforced_hopper.diamond_lane_upgrade": "Diamond Lane Upgrade",
+  "item.reinforced_hopper.diamond_lane_upgrade.tooltip": "Enables 3 simultaneous transfer lanes for distinct items.",
+  "item.reinforced_hopper.netherite_lane_upgrade": "Netherite Lane Upgrade",
+  "item.reinforced_hopper.netherite_lane_upgrade.tooltip": "Enables 4 simultaneous transfer lanes for distinct items.",
   "container.reinforced_hopper": "Reinforced Hopper",
   "container.inverted_reinforced_hopper": "Inverted Reinforced Hopper",
   "itemGroup.reinforced_hopper": "Reinforced Hopper",
   "gui.reinforced_hopper.upgrade_slot": "Speed Upgrade Slot (Diamond Upgrade)",
-  "gui.reinforced_hopper.block_slot": "Channel Upgrade Slot (Emerald, Diamond, Netherite Block)"
+  "gui.reinforced_hopper.lane_slot": "Lane Upgrade Slot (Emerald, Diamond, or Netherite)"
 }

@@ -12,6 +12,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.function.Function;
@@ -24,6 +25,9 @@ public class ModItems {
 			.build();
 
 	public static final Item DIAMOND_UPGRADE = register("diamond_upgrade", ReinforcedHopperUpgradeItem::new, new Item.Settings().maxCount(16));
+	public static final Item EMERALD_LANE_UPGRADE = register("emerald_lane_upgrade", settings -> new LaneUpgradeItem(settings, 2, Formatting.GREEN), new Item.Settings().maxCount(16));
+	public static final Item DIAMOND_LANE_UPGRADE = register("diamond_lane_upgrade", settings -> new LaneUpgradeItem(settings, 3, Formatting.AQUA), new Item.Settings().maxCount(16));
+	public static final Item NETHERITE_LANE_UPGRADE = register("netherite_lane_upgrade", settings -> new LaneUpgradeItem(settings, 4, Formatting.DARK_PURPLE), new Item.Settings().maxCount(16));
 
 	public static Item register(String name, Function<Item.Settings, Item> itemFactory, Item.Settings settings) {
 		RegistryKey<Item> itemKey = RegistryKey.of(RegistryKeys.ITEM, Identifier.of(ReinforcedHopperMod.MOD_ID, name));
@@ -37,6 +41,9 @@ public class ModItems {
 			group.add(ModBlocks.REINFORCED_HOPPER.asItem());
 			group.add(ModBlocks.INVERTED_REINFORCED_HOPPER.asItem());
 			group.add(DIAMOND_UPGRADE);
+			group.add(EMERALD_LANE_UPGRADE);
+			group.add(DIAMOND_LANE_UPGRADE);
+			group.add(NETHERITE_LANE_UPGRADE);
 		});
 	}
 }

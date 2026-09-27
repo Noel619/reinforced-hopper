@@ -5,9 +5,15 @@
   "item.reinforced_hopper.inverted_reinforced_hopper": "Tolva Reforzada Invertida",
   "item.reinforced_hopper.diamond_upgrade": "Mejora de Velocidad Reforzada",
   "item.reinforced_hopper.diamond_upgrade.tooltip": "¡Colócalo en una Tolva Reforzada para triplicar su velocidad (x3)!",
+  "item.reinforced_hopper.emerald_lane_upgrade": "Mejora de Carril de Esmeralda",
+  "item.reinforced_hopper.emerald_lane_upgrade.tooltip": "Habilita 2 carriles de transferencia simultánea para ítems distintos.",
+  "item.reinforced_hopper.diamond_lane_upgrade": "Mejora de Carril de Diamante",
+  "item.reinforced_hopper.diamond_lane_upgrade.tooltip": "Habilita 3 carriles de transferencia simultánea para ítems distintos.",
+  "item.reinforced_hopper.netherite_lane_upgrade": "Mejora de Carril de Netherite",
+  "item.reinforced_hopper.netherite_lane_upgrade.tooltip": "Habilita 4 carriles de transferencia simultánea para ítems distintos.",
   "container.reinforced_hopper": "Tolva Reforzada",
   "container.inverted_reinforced_hopper": "Tolva Reforzada Invertida",
   "itemGroup.reinforced_hopper": "Tolva Reforzada",
   "gui.reinforced_hopper.upgrade_slot": "Ranura de Mejora de Velocidad (Mejora de Diamante)",
-  "gui.reinforced_hopper.block_slot": "Ranura de Mejora de Carriles (Bloque de Esmeralda, Diamante o Netherita)"
+  "gui.reinforced_hopper.lane_slot": "Ranura de Mejora de Carriles (Esmeralda, Diamante o Netherite)"
 }

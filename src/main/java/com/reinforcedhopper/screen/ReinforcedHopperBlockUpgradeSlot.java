@@ -1,8 +1,9 @@
 package com.reinforcedhopper.screen;
 
+import com.reinforcedhopper.item.LaneUpgradeItem;
+import com.reinforcedhopper.item.ModItems;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.screen.slot.Slot;
 
 public class ReinforcedHopperBlockUpgradeSlot extends Slot {
@@ -16,7 +17,10 @@ public class ReinforcedHopperBlockUpgradeSlot extends Slot {
 	}
 
 	public static boolean isValidBlockUpgrade(ItemStack stack) {
-		return stack.isOf(Items.EMERALD_BLOCK) || stack.isOf(Items.DIAMOND_BLOCK) || stack.isOf(Items.NETHERITE_BLOCK);
+		return stack.getItem() instanceof LaneUpgradeItem
+				|| stack.isOf(ModItems.EMERALD_LANE_UPGRADE)
+				|| stack.isOf(ModItems.DIAMOND_LANE_UPGRADE)
+				|| stack.isOf(ModItems.NETHERITE_LANE_UPGRADE);
 	}
 
 	@Override

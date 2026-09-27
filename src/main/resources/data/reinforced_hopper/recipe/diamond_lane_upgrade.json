@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "D": "minecraft:diamond",
+    "R": "minecraft:redstone"
+  },
+  "pattern": [
+    "IDI",
+    "DRD",
+    "IDI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "reinforced_hopper:diamond_lane_upgrade"
+  }
+}
