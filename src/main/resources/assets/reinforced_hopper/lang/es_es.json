@@ -1,0 +1,13 @@
+{
+  "block.reinforced_hopper.reinforced_hopper": "Tolva Reforzada",
+  "item.reinforced_hopper.reinforced_hopper": "Tolva Reforzada",
+  "block.reinforced_hopper.inverted_reinforced_hopper": "Tolva Reforzada Invertida",
+  "item.reinforced_hopper.inverted_reinforced_hopper": "Tolva Reforzada Invertida",
+  "item.reinforced_hopper.diamond_upgrade": "Mejora de Velocidad Reforzada",
+  "item.reinforced_hopper.diamond_upgrade.tooltip": "¡Colócalo en una Tolva Reforzada para triplicar su velocidad (x3)!",
+  "container.reinforced_hopper": "Tolva Reforzada",
+  "container.inverted_reinforced_hopper": "Tolva Reforzada Invertida",
+  "itemGroup.reinforced_hopper": "Tolva Reforzada",
+  "gui.reinforced_hopper.upgrade_slot": "Ranura de Mejora de Velocidad (Mejora de Diamante)",
+  "gui.reinforced_hopper.block_slot": "Ranura de Mejora de Carriles (Bloque de Esmeralda, Diamante o Netherita)"
+}

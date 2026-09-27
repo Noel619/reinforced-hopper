@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "reinforced_hopper:block/inverted_reinforced_hopper"
+    },
+    "facing=east": {
+      "model": "reinforced_hopper:block/inverted_reinforced_hopper_side",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "reinforced_hopper:block/inverted_reinforced_hopper_side"
+    },
+    "facing=south": {
+      "model": "reinforced_hopper:block/inverted_reinforced_hopper_side",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "reinforced_hopper:block/inverted_reinforced_hopper_side",
+      "y": 270
+    }
+  }
+}

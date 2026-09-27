@@ -1,0 +1,13 @@
+{
+  "block.reinforced_hopper.reinforced_hopper": "Reinforced Hopper",
+  "item.reinforced_hopper.reinforced_hopper": "Reinforced Hopper",
+  "block.reinforced_hopper.inverted_reinforced_hopper": "Inverted Reinforced Hopper",
+  "item.reinforced_hopper.inverted_reinforced_hopper": "Inverted Reinforced Hopper",
+  "item.reinforced_hopper.diamond_upgrade": "Reinforced Speed Upgrade",
+  "item.reinforced_hopper.diamond_upgrade.tooltip": "Insert into a Reinforced Hopper to boost its speed to 3x!",
+  "container.reinforced_hopper": "Reinforced Hopper",
+  "container.inverted_reinforced_hopper": "Inverted Reinforced Hopper",
+  "itemGroup.reinforced_hopper": "Reinforced Hopper",
+  "gui.reinforced_hopper.upgrade_slot": "Speed Upgrade Slot (Diamond Upgrade)",
+  "gui.reinforced_hopper.block_slot": "Channel Upgrade Slot (Emerald, Diamond, Netherite Block)"
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "reinforced_hopper",
+  "version": "${version}",
+  "name": "Reinforced Hopper",
+  "description": "Adds a Reinforced Hopper with 7 slots, 2.5x base speed, and a dedicated diamond upgrade slot for 3x speed.",
+  "authors": [
+    "Noel"
+  ],
+  "license": "MIT",
+  "icon": "assets/reinforced_hopper/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.reinforcedhopper.ReinforcedHopperMod"
+    ],
+    "client": [
+      "com.reinforcedhopper.client.ReinforcedHopperClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": "~1.21.9",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

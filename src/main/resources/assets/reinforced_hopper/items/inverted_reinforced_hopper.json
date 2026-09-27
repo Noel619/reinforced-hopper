@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "reinforced_hopper:item/inverted_reinforced_hopper"
+  }
+}

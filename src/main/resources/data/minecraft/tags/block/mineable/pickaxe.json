@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "reinforced_hopper:reinforced_hopper",
+    "reinforced_hopper:inverted_reinforced_hopper"
+  ]
+}
