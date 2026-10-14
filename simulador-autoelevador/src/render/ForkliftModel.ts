@@ -301,13 +301,15 @@ export class ForkliftModel {
     seatBack.rotation.x = -0.18;
     const armrest = box(0.07, 0.06, 0.3, M.seat, -0.29, s.seatHeight + 0.17, seatZ - 0.02);
     g.add(seatBase, seatBack, armrest);
-    // Cinturón (visible cuando está abrochado)
-    this.beltMesh = box(0.46, 0.05, 0.02, new THREE.MeshStandardMaterial({ color: 0xff7a00, roughness: 0.7 }), 0, s.seatHeight + 0.12, seatZ + 0.2);
+    // Cinturón (visible cuando está abrochado) y hebilla en la esquina delantera derecha del asiento
+    const beltMat = new THREE.MeshStandardMaterial({ color: 0xff7a00, roughness: 0.7 });
+    this.beltMesh = box(0.46, 0.05, 0.02, beltMat, 0, s.seatHeight + 0.12, seatZ + 0.2);
     this.beltMesh.visible = false;
     g.add(this.beltMesh);
-    const buckle = box(0.06, 0.06, 0.06, M.chrome, -0.26, s.seatHeight + 0.06, seatZ + 0.1);
+    const buckle = box(0.07, 0.045, 0.09, beltMat, -0.235, s.seatHeight + 0.03, seatZ + 0.2);
     buckle.name = 'belt';
-    g.add(buckle);
+    const latch = box(0.035, 0.012, 0.05, M.chrome, -0.235, s.seatHeight + 0.058, seatZ + 0.2);
+    g.add(buckle, latch);
     this.registerControl('belt', [buckle, this.beltMesh], buckle, 'Cinturón de seguridad (clic)');
 
     // Capot delantero / tablero (cowl)
@@ -366,10 +368,11 @@ export class ForkliftModel {
     // Palanca de marcha (en la columna, del lado izquierdo, asomando fuera del volante)
     const dirPivot = new THREE.Group();
     const colAt = (t: number) => colBase.clone().lerp(wheelCenter, t);
-    dirPivot.position.copy(colAt(0.62)).add(new THREE.Vector3(0.03, 0, 0));
-    const dirStick = rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.2, 0.03, 0.01), 0.009, M.chrome, false);
+    // alta en la columna, justo debajo del volante: el pomo queda fuera del aro y no tapa la pantalla
+    dirPivot.position.copy(colAt(0.8)).add(new THREE.Vector3(0.03, 0, 0));
+    const dirStick = rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.23, 0.03, 0.01), 0.009, M.chrome, false);
     const dirKnob = new THREE.Mesh(new THREE.SphereGeometry(0.026, 12, 10), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 }));
-    dirKnob.position.set(0.21, 0.03, 0.01);
+    dirKnob.position.set(0.24, 0.03, 0.01);
     dirPivot.add(dirStick, dirKnob);
     g.add(dirPivot);
     this.levers.direction = dirPivot;
@@ -407,21 +410,29 @@ export class ForkliftModel {
       this.registerControl(d.id, [kn, stick], pivot, d.label);
     });
 
-    // Llave de contacto (sobre el tablero, a la derecha)
-    const keyPlate = box(0.09, 0.012, 0.09, M.black, -0.36, cowlTop + 0.04, -0.2);
-    g.add(keyPlate);
+    // Llave de contacto y luces: en la cara del capot que mira al operador, debajo de las palancas
+    const faceZ = -0.12 - 0.16 - 0.004;
+    const panelY = cowlTop - 0.1;
+    const switchPanel = box(0.17, 0.09, 0.008, M.black, -0.37, panelY, faceZ + 0.002);
+    g.add(switchPanel);
+    // (fuera del aro del volante visto desde el asiento)
     const keyPivot = new THREE.Group();
-    keyPivot.position.set(-0.36, cowlTop + 0.05, -0.2);
-    const keyBarrel = cyl(0.03, 0.02, M.chrome);
-    const keyHead = box(0.07, 0.04, 0.014, new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.4 }), 0, 0.04, 0);
-    keyHead.rotation.x = -0.35;
+    keyPivot.position.set(-0.33, panelY, faceZ);
+    // el eje local Y apunta hacia el operador (−Z): la llave gira sobre su propio eje
+    keyPivot.rotation.x = -Math.PI / 2;
+    const keyBarrel = cyl(0.026, 0.02, M.chrome);
+    keyBarrel.position.y = 0.01;
+    const keyHead = box(0.065, 0.035, 0.012, new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.4 }), 0, 0.035, 0);
     keyPivot.add(keyBarrel, keyHead);
     g.add(keyPivot);
     this.levers.key = keyPivot;
     this.registerControl('key', [keyHead, keyBarrel], keyPivot, 'Llave de contacto: clic para arrancar / apagar (con la palanca en N)');
 
-    // Interruptor de luces
-    const lightSw = box(0.05, 0.03, 0.03, new THREE.MeshStandardMaterial({ color: 0x3355aa, roughness: 0.4 }), -0.27, cowlTop + 0.055, -0.13);
+    // Interruptor de luces (basculante, con el símbolo impreso en la cara que mira al operador)
+    const swBlue = new THREE.MeshStandardMaterial({ color: 0x3355aa, roughness: 0.4 });
+    const swFace = new THREE.MeshStandardMaterial({ map: labelTexture('☀', { bg: '#3355aa', fg: '#ffd400', w: 64, h: 80, font: 'bold 52px sans-serif' }), roughness: 0.4 });
+    const lightSw = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.025), [swBlue, swBlue, swBlue, swBlue, swBlue, swFace]);
+    lightSw.position.set(-0.415, panelY, faceZ - 0.008);
     g.add(lightSw);
     this.levers.lights = lightSw;
     this.registerControl('lights', [lightSw], lightSw, 'Luces de trabajo (clic)');
@@ -703,7 +714,7 @@ export class ForkliftModel {
     const pb = this.levers.parking;
     if (pb) pb.rotation.x = c.parkingBrake ? 0.0 : 0.6;
     const ls = this.levers.lights;
-    if (ls) (ls as THREE.Mesh).scale.y = c.lights ? 0.6 : 1;
+    if (ls) ls.rotation.x = c.lights ? 0.35 : -0.35;
     this.beltMesh.visible = c.seatbelt;
     if (this.pedals.acc) this.pedals.acc.rotation.x = c.throttle * 0.35;
     if (this.pedals.brake) this.pedals.brake.rotation.x = c.brake * 0.35;

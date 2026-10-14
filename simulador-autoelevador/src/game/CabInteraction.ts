@@ -109,10 +109,10 @@ export class CabInteraction {
         // tirar hacia el operador (ratón hacia abajo) = positivo
         this.mapper.mouseLever[d.id as LeverId] = THREE.MathUtils.clamp(dy / 70, -1, 1);
       } else if (d.id === 'direction') {
+        // palanca de 3 posiciones: cada ~20 px de recorrido salta una muesca (F ↔ N ↔ R)
         const prev = c.direction;
-        if (dy < -18) c.direction = 1;
-        else if (dy > 18) c.direction = -1;
-        else c.direction = 0;
+        const steps = dy < 0 ? Math.floor(-dy / 20) : -Math.floor(dy / 20);
+        c.direction = THREE.MathUtils.clamp(d.v0 + steps, -1, 1) as -1 | 0 | 1;
         if (prev !== c.direction) this.onClick?.('direction');
       } else if (d.id === 'wheel') {
         const a = this.wheelAngle(mx, my, width, height);

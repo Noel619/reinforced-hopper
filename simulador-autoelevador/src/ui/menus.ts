@@ -105,7 +105,8 @@ export function helpScreen(onClose: () => void): HTMLDivElement {
         <br>Tirar = subir / inclinar atrás / desplazar a la izquierda. Empujar = bajar / inclinar adelante / derecha.</li>
       <li><b>Palanca de marcha</b> (izquierda de la columna): arrastrá arriba = adelante (F), abajo = atrás (R), al medio = neutral (N).</li>
       <li><b>Volante:</b> agarrá el pomo o el aro y giralo en círculo como en la realidad.</li>
-      <li><b>Llave, freno de mano, cinturón y luces:</b> clic. <b>Bocina:</b> botón rojo del volante.</li>
+      <li><b>Llave de contacto y luces:</b> en el frente del tablero, debajo de las palancas (mirá hacia abajo a la derecha). Clic para accionarlas.</li>
+      <li><b>Freno de mano:</b> palanca roja a la izquierda del volante. <b>Cinturón:</b> hebilla naranja a la derecha del asiento (mirá hacia abajo). <b>Bocina:</b> botón rojo del volante.</li>
       <li>Los pedales se manejan con el teclado o con R2/L2.</li>
       </ul>`,
     'Seguridad': `

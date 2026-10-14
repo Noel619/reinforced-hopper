@@ -21,7 +21,7 @@ export class CameraRig {
   modes: CameraMode[] = ['cabina', 'tercera', 'horquillas', 'aerea'];
   // cabina
   headYaw = 0;
-  headPitch = -0.2;
+  headPitch = -0.26;
   private lookBack = 0;
   cabFov = 72;
   // tercera persona
@@ -57,7 +57,7 @@ export class CameraRig {
     }
     if (m === 'cabina') {
       this.headYaw = 0;
-      this.headPitch = -0.2;
+      this.headPitch = -0.26;
     }
   }
 
@@ -66,7 +66,7 @@ export class CameraRig {
     const k = 0.0045;
     if (this.mode === 'cabina') {
       this.headYaw = THREE.MathUtils.clamp(this.headYaw - dx * k, -2.6, 2.6);
-      this.headPitch = THREE.MathUtils.clamp(this.headPitch - dy * k, -1.2, 0.9);
+      this.headPitch = THREE.MathUtils.clamp(this.headPitch - dy * k, -1.35, 0.9);
     } else if (this.mode === 'tercera' || this.mode === 'aerea') {
       this.orbitYaw -= dx * k;
       this.orbitPitch = THREE.MathUtils.clamp(this.orbitPitch + dy * k, 0.05, 1.45);
@@ -78,7 +78,7 @@ export class CameraRig {
   lookRate(yawRate: number, pitchRate: number, dt: number) {
     if (this.mode === 'cabina') {
       this.headYaw = THREE.MathUtils.clamp(this.headYaw + yawRate * dt, -2.6, 2.6);
-      this.headPitch = THREE.MathUtils.clamp(this.headPitch + pitchRate * dt, -1.2, 0.9);
+      this.headPitch = THREE.MathUtils.clamp(this.headPitch + pitchRate * dt, -1.35, 0.9);
     } else {
       this.orbitYaw += yawRate * dt;
       this.orbitPitch = THREE.MathUtils.clamp(this.orbitPitch - pitchRate * dt, 0.05, 1.45);
@@ -93,7 +93,7 @@ export class CameraRig {
 
   resetView() {
     this.headYaw = 0;
-    this.headPitch = -0.2;
+    this.headPitch = -0.26;
     this.orbitYaw = 0;
     this.orbitPitch = 0.38;
   }
