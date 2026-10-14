@@ -60,6 +60,7 @@ export class Session {
     this.world = new World();
     this.setupEnvironment();
     const { spec, position, yaw } = mode.build(this.world);
+    this.world.optimizeStatic();
     this.respawnPos.copy(position);
     this.respawnYaw = yaw;
     this.rig = new CameraRig(app.aspect);
@@ -236,7 +237,8 @@ export class Session {
     const h = this.world.pw.dt;
     this.acc += Math.min(dt, 0.1) * this.timeScale;
     let steps = 0;
-    while (this.acc >= h && steps < 8) {
+    const maxSteps = this.app.debug.maxSteps;
+    while (this.acc >= h && steps < maxSteps) {
       this.world.beforeStep();
       this.world.step();
       this.world.afterStep();
@@ -244,10 +246,10 @@ export class Session {
       this.acc -= h;
       steps++;
     }
-    if (steps >= 8) this.acc = 0;
+    if (steps >= maxSteps) this.acc = 0;
     const alpha = this.acc / h;
     this.world.syncVisuals(alpha);
-    this.world.update(dt);
+    this.world.update(dt * this.timeScale);
 
     // partes móviles del modelo
     const t = fl.telemetry;
@@ -256,8 +258,8 @@ export class Session {
     m.updateTiltCylinders();
 
     // reglas y modo
-    this.safety.update(dt, fl);
-    this.mode.update?.(dt, this);
+    this.safety.update(dt * this.timeScale, fl);
+    this.mode.update?.(dt * this.timeScale, this);
 
     // cámara y sol
     this.rig.shake = fl.telemetry.engineRunning ? (fl.isElectric ? 0.05 : 0.25 + t.engineLoad * 0.5) : 0;

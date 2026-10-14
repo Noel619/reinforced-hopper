@@ -55,6 +55,8 @@ export class ControlMapper {
   mouseHorn = false;
   /** Bloquea los mandos de conducción (menús abiertos, etc.). */
   locked = false;
+  /** Los mandos los maneja un programa externo (pruebas automáticas). */
+  external = false;
 
   update(dt: number, input: Input, fl: ForkliftPhysics): UiActions {
     const c = fl.controls;
@@ -70,6 +72,7 @@ export class ControlMapper {
       spawnMenu: input.keyPressed('KeyN'),
       resetForklift: input.keyPressed('Backspace'),
     };
+    if (this.external) return ui;
     if (this.locked) {
       c.throttle = 0;
       c.lift = c.tilt = c.sideShift = c.spread = 0;

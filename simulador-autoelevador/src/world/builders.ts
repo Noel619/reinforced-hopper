@@ -2,10 +2,21 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RAPIER, addStaticBox, GROUPS } from '../sim/physics.ts';
 import { materials } from '../render/materials.ts';
-import { labelTexture } from '../render/textures.ts';
+import { labelTexture, LabelAtlas } from '../render/textures.ts';
 import type { World, Slot, Zone, TruckInfo } from './World.ts';
 
 const UP = new THREE.Vector3(0, 1, 0);
+
+/** Materiales compartidos: las mallas con el mismo material se pueden fusionar en una sola llamada de dibujo. */
+const matCache = new Map<string, THREE.Material>();
+function sharedMat(key: string, make: () => THREE.Material): THREE.Material {
+  let m = matCache.get(key);
+  if (!m) {
+    m = make();
+    matCache.set(key, m);
+  }
+  return m;
+}
 
 /** Transforma un punto local (x, z) con yaw y origen. */
 function local(origin: THREE.Vector3, yaw: number, x: number, y: number, z: number): THREE.Vector3 {
@@ -37,7 +48,10 @@ export function staticBox(
   m.castShadow = opts.castShadow ?? true;
   m.receiveShadow = true;
   world.staticGroup.add(m);
-  if (opts.occluder) world.occluders.push(m);
+  if (opts.occluder) {
+    m.userData.occluder = true;
+    world.occluders.push(m);
+  }
   return m;
 }
 
@@ -77,7 +91,7 @@ export function ground(world: World, opts: { size: number; inside?: { x0: number
 // ------------------------------------------------------------------ pintura en el piso
 export function paintLine(world: World, x1: number, z1: number, x2: number, z2: number, width: number, color: number, y = 0.006) {
   const len = Math.hypot(x2 - x1, z2 - z1);
-  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.75, polygonOffset: true, polygonOffsetFactor: -2 });
+  const mat = sharedMat(`paint:${color}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.75, polygonOffset: true, polygonOffsetFactor: -2 }));
   const m = new THREE.Mesh(new THREE.PlaneGeometry(width, len), mat);
   m.rotation.order = 'YXZ';
   m.rotation.set(-Math.PI / 2, Math.atan2(x2 - x1, z2 - z1), 0);
@@ -103,7 +117,7 @@ export function zone(world: World, z: Omit<Zone, 'mesh'>, opts: { dashed?: boole
   const w = z.width;
   const d = z.depth;
   const lw = 0.1;
-  const mat = new THREE.MeshStandardMaterial({ color: z.color, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2 });
+  const mat = sharedMat(`zone:${z.color}`, () => new THREE.MeshStandardMaterial({ color: z.color, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2 }));
   const edges: [number, number, number, number][] = [
     [-w / 2, -d / 2, w / 2, -d / 2],
     [w / 2, -d / 2, w / 2, d / 2],
@@ -129,7 +143,7 @@ export function zone(world: World, z: Omit<Zone, 'mesh'>, opts: { dashed?: boole
     }
   }
   if (opts.fill) {
-    const fill = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: z.color, transparent: true, opacity: 0.16, roughness: 0.8, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }));
+    const fill = new THREE.Mesh(new THREE.PlaneGeometry(w, d), sharedMat(`zonefill:${z.color}`, () => new THREE.MeshStandardMaterial({ color: z.color, transparent: true, opacity: 0.16, roughness: 0.8, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 })));
     fill.rotation.x = -Math.PI / 2;
     fill.position.y = 0.005;
     grp.add(fill);
@@ -244,7 +258,7 @@ export function building(world: World, x0: number, z0: number, x1: number, z1: n
 /** Columna de estructura con protector. */
 export function column(world: World, x: number, z: number, height: number) {
   const M = materials();
-  staticBox(world, new THREE.Vector3(x, height / 2, z), new THREE.Vector3(0.35, height, 0.35), 0, new THREE.MeshStandardMaterial({ color: 0x8a8f94, roughness: 0.6, metalness: 0.4 }), 'wall', { occluder: true });
+  staticBox(world, new THREE.Vector3(x, height / 2, z), new THREE.Vector3(0.35, height, 0.35), 0, sharedMat('column', () => new THREE.MeshStandardMaterial({ color: 0x8a8f94, roughness: 0.6, metalness: 0.4 })), 'wall', { occluder: true });
   staticBox(world, new THREE.Vector3(x, 0.5, z), new THREE.Vector3(0.6, 1.0, 0.6), 0, M.stripes, 'wall');
 }
 
@@ -280,6 +294,7 @@ export function rack(world: World, o: RackOptions): Slot[] {
   const braces: THREE.BufferGeometry[] = [];
   const pitch = bayW + upW;
   const slots: Slot[] = [];
+  const atlas = new LabelAtlas(4, Math.ceil((o.bays * perBay * o.levels.length) / 4) + 1);
   const addGeo = (arr: THREE.BufferGeometry[], w: number, h: number, d: number, x: number, y: number, z: number, rotX = 0) => {
     const g = new THREE.BoxGeometry(w, h, d);
     if (rotX) g.rotateX(rotX);
@@ -324,17 +339,18 @@ export function rack(world: World, o: RackOptions): Slot[] {
         const id = `${o.name}-${String(b * perBay + k + 1).padStart(2, '0')}-${li + 1}`;
         slots.push({ id, label: id, center, yaw: o.yaw, level: li, rackId: o.id, halfWidth: bayW / perBay / 2, clearance });
       }
-      // etiquetas de ubicación en la viga frontal
+      // etiquetas de ubicación en la viga frontal (todas en un atlas por estantería)
       if (h > 0.01 || li === 0) {
         for (let k = 0; k < perBay; k++) {
+          if (atlas.full) break;
           const sx = b * pitch + upW + (bayW / perBay) * (k + 0.5);
           const lbl = `${o.name}-${String(b * perBay + k + 1).padStart(2, '0')}-${li + 1}`;
-          const tex = labelTexture(lbl, { bg: '#ffffff', fg: '#111111', w: 256, h: 64, border: '#1f4f9a' });
-          const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.1), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
+          const pl = atlas.plane(lbl, 0.4, 0.1, { bg: '#ffffff', fg: '#111111', border: '#1f4f9a' });
           const y = h > 0.01 ? h - 0.055 : 0.32;
           const zf = h > 0.01 ? depth / 2 + 0.027 : depth / 2 + 0.215;
           pl.position.copy(local(o.origin, o.yaw, sx, y, zf - depth / 2));
           pl.rotation.y = o.yaw;
+          pl.castShadow = false;
           world.staticGroup.add(pl);
         }
       }
@@ -418,7 +434,7 @@ export function flatbedTruck(world: World, id: number, center: THREE.Vector3, ya
   const cab = new THREE.Mesh(new THREE.BoxGeometry(2.45, 2.6, 2.2), cabMat);
   cab.position.set(0, 1.3 + 1.0, L / 2 + 2.6);
   grp.add(cab);
-  const windshield = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.9), new THREE.MeshStandardMaterial({ color: 0x223344, roughness: 0.1, metalness: 0.6 }));
+  const windshield = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.9), sharedMat('windshield', () => new THREE.MeshStandardMaterial({ color: 0x223344, roughness: 0.1, metalness: 0.6 })));
   windshield.position.set(0, 2.85, L / 2 + 3.71);
   grp.add(windshield);
   const tchassis = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 4.4), M.chassisDark);
@@ -482,7 +498,7 @@ export function removeTruck(world: World, t: TruckInfo) {
 }
 
 // ------------------------------------------------------------------ rampa
-export function ramp(world: World, base: THREE.Vector3, yaw: number, length: number, width: number, height: number, withPlatform = 0) {
+export function ramp(world: World, base: THREE.Vector3, yaw: number, length: number, width: number, height: number, withPlatform = 0, platformWidth = width) {
   const M = materials();
   const angle = Math.atan2(height, length);
   const slopeLen = Math.hypot(length, height);
@@ -492,7 +508,7 @@ export function ramp(world: World, base: THREE.Vector3, yaw: number, length: num
   const c = centerLocal.clone().applyAxisAngle(UP, yaw).add(base);
   const q = new THREE.Quaternion().setFromAxisAngle(UP, yaw).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -angle));
   addStaticBox(world.pw, c.x, c.y, c.z, width / 2, th / 2, slopeLen / 2, { rot: { x: q.x, y: q.y, z: q.z, w: q.w }, friction: 0.9, tag: { kind: 'static', what: 'ramp' } });
-  const mat = new THREE.MeshStandardMaterial({ color: 0x8a8d90, roughness: 0.85, metalness: 0.2 });
+  const mat = sharedMat('ramp', () => new THREE.MeshStandardMaterial({ color: 0x8a8d90, roughness: 0.85, metalness: 0.2 }));
   const m = new THREE.Mesh(new THREE.BoxGeometry(width, th, slopeLen), mat);
   m.position.copy(c);
   m.quaternion.copy(q);
@@ -510,7 +526,16 @@ export function ramp(world: World, base: THREE.Vector3, yaw: number, length: num
   }
   if (withPlatform > 0) {
     const pc = local(base, yaw, 0, height / 2, length + withPlatform / 2);
-    staticBox(world, pc, new THREE.Vector3(width, height, withPlatform), yaw, mat, 'dock', { friction: 0.9 });
+    staticBox(world, pc, new THREE.Vector3(platformWidth, height, withPlatform), yaw, mat, 'dock', { friction: 0.9 });
+    // cordones de seguridad en los bordes de la plataforma (menos la entrada de la rampa)
+    const ch = 0.16;
+    const y = height + ch / 2;
+    const side = (platformWidth - width) / 2;
+    for (const sx of [-1, 1]) {
+      staticBox(world, local(base, yaw, sx * (platformWidth / 2 - 0.08), y, length + withPlatform / 2), new THREE.Vector3(0.16, ch, withPlatform), yaw, M.stripes, 'dock');
+      if (side > 0.2) staticBox(world, local(base, yaw, sx * (width / 2 + side / 2), y, length + 0.08), new THREE.Vector3(side, ch, 0.16), yaw, M.stripes, 'dock');
+    }
+    staticBox(world, local(base, yaw, 0, y, length + withPlatform - 0.08), new THREE.Vector3(platformWidth, ch, 0.16), yaw, M.stripes, 'dock');
   }
   return m;
 }
@@ -535,7 +560,7 @@ export function cone(world: World, x: number, z: number): ConeEntity {
   world.pw.tags.set(col, { kind: 'prop', what: 'cone', id });
   const grp = new THREE.Group();
   const c = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.72, 16), M.cone);
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.11, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }));
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.11, 0.1, 16), sharedMat('coneband', () => new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })));
   band.position.y = 0.05;
   const base = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.04, 0.4), M.cone);
   base.position.y = -0.34;

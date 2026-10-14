@@ -34,24 +34,24 @@ export const MODULES: ModuleDef[] = [
   {
     id: 'rack4',
     racks: [
-      { origin: [-21.5, 10.2], yaw: 0, levels: [0, 1.5, 3.0, 4.2], name: 'A' },
-      { origin: [-10.85, 7.85], yaw: Math.PI, levels: [0, 1.5, 3.0, 4.2], name: 'B' },
+      { origin: [-21.5, 10.2], yaw: 0, levels: [0, 1.5, 3.0, 4.5], name: 'A' },
+      { origin: [-10.85, 7.85], yaw: Math.PI, levels: [0, 1.5, 3.0, 4.5], name: 'B' },
     ],
     area: [-21.5, 7.85, -10.85, 10.2],
   },
   {
     id: 'rack5',
     racks: [
-      { origin: [-9.3, 10.2], yaw: 0, levels: [0, 1.5, 3.0, 4.2], name: 'C' },
-      { origin: [1.35, 7.85], yaw: Math.PI, levels: [0, 1.5, 3.0, 4.2], name: 'D' },
+      { origin: [-9.3, 10.2], yaw: 0, levels: [0, 1.5, 3.0, 4.5], name: 'C' },
+      { origin: [1.35, 7.85], yaw: Math.PI, levels: [0, 1.5, 3.0, 4.5], name: 'D' },
     ],
     area: [-9.3, 7.85, 1.35, 10.2],
   },
   {
     id: 'rack6',
     racks: [
-      { origin: [2.9, 10.2], yaw: 0, levels: [0, 1.5, 3.0, 4.2], name: 'E' },
-      { origin: [13.55, 7.85], yaw: Math.PI, levels: [0, 1.5, 3.0, 4.2], name: 'F' },
+      { origin: [2.9, 10.2], yaw: 0, levels: [0, 1.5, 3.0, 4.5], name: 'E' },
+      { origin: [13.55, 7.85], yaw: Math.PI, levels: [0, 1.5, 3.0, 4.5], name: 'F' },
     ],
     area: [2.9, 7.85, 13.55, 10.2],
   },

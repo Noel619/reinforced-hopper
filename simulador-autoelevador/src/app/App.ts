@@ -35,6 +35,8 @@ export class App {
   private menuModel: ForkliftModel | null = null;
   private launcher: ModeLauncher;
   fps = 0;
+  /** Opciones de depuración/pruebas automatizadas. */
+  debug = { noRender: false, maxSteps: 8 };
 
   constructor(container: HTMLElement, launcher: ModeLauncher) {
     this.container = container;
@@ -112,7 +114,7 @@ export class App {
         this.mapper.locked = this.uiBlocking;
         s.frame(dt);
       }
-      s.render(this.renderer);
+      if (!this.debug.noRender) s.render(this.renderer);
     } else {
       this.renderMenuScene();
     }

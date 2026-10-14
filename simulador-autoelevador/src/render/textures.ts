@@ -300,3 +300,71 @@ export function labelMesh(text: string, width: number, height: number, opts: Par
   const m = new THREE.Mesh(new THREE.PlaneGeometry(width, height), mat);
   return m;
 }
+
+/** Atlas de etiquetas: muchas etiquetas en una sola textura (una sola llamada de dibujo). */
+export class LabelAtlas {
+  readonly canvas: HTMLCanvasElement;
+  readonly texture: THREE.CanvasTexture;
+  readonly material: THREE.MeshStandardMaterial;
+  private ctx: CanvasRenderingContext2D;
+  private next = 0;
+  readonly cols: number;
+  readonly rows: number;
+  readonly cellW: number;
+  readonly cellH: number;
+
+  constructor(cols = 4, rows = 32, cellW = 128, cellH = 32) {
+    this.cols = cols;
+    this.rows = rows;
+    this.cellW = cellW;
+    this.cellH = cellH;
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = cols * cellW;
+    this.canvas.height = rows * cellH;
+    this.ctx = this.canvas.getContext('2d')!;
+    this.texture = new THREE.CanvasTexture(this.canvas);
+    this.texture.colorSpace = THREE.SRGBColorSpace;
+    this.texture.anisotropy = 4;
+    this.material = new THREE.MeshStandardMaterial({ map: this.texture, roughness: 0.7 });
+  }
+
+  get full() {
+    return this.next >= this.cols * this.rows;
+  }
+
+  /** Dibuja una etiqueta y devuelve un plano con las UV de su celda. */
+  plane(text: string, w: number, h: number, opts: { bg?: string; fg?: string; border?: string } = {}): THREE.Mesh {
+    const i = this.next++;
+    const cx = (i % this.cols) * this.cellW;
+    const cy = Math.floor(i / this.cols) * this.cellH;
+    const ctx = this.ctx;
+    ctx.fillStyle = opts.bg ?? '#ffffff';
+    ctx.fillRect(cx, cy, this.cellW, this.cellH);
+    if (opts.border) {
+      ctx.strokeStyle = opts.border;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cx + 1.5, cy + 1.5, this.cellW - 3, this.cellH - 3);
+    }
+    ctx.fillStyle = opts.fg ?? '#111111';
+    ctx.font = `bold ${Math.floor(this.cellH * 0.62)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx + this.cellW / 2, cy + this.cellH / 2 + 1);
+    this.texture.needsUpdate = true;
+    const g = new THREE.PlaneGeometry(w, h);
+    const uv = g.attributes.uv as THREE.BufferAttribute;
+    const W = this.canvas.width;
+    const H = this.canvas.height;
+    const u0 = cx / W;
+    const u1 = (cx + this.cellW) / W;
+    // flipY de la textura: v=1 arriba del canvas
+    const v1 = 1 - cy / H;
+    const v0 = 1 - (cy + this.cellH) / H;
+    for (let k = 0; k < uv.count; k++) {
+      const u = uv.getX(k);
+      const v = uv.getY(k);
+      uv.setXY(k, u0 + (u1 - u0) * u, v0 + (v1 - v0) * v);
+    }
+    return new THREE.Mesh(g, this.material);
+  }
+}

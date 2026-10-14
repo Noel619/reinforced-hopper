@@ -302,23 +302,24 @@ export const LESSONS: Lesson[] = [
     summary: 'Cargar tres pallets en un camión playo por el costado.',
     objectives: ['Elevar a la altura de la caja (1,30 m) antes de acercarse', 'Depositar en el hueco marcado', 'No golpear el camión'],
     spec: 'puma25',
-    par: 300,
-    start: { x: -14, z: -14.5, yawDeg: 180, engineOn: true },
+    par: 420,
+    start: { x: -14, z: -4.6, yawDeg: 180, engineOn: true },
     pedestrians: true,
     setup(world, refs) {
       const truck = world.trucks.find((t) => t.id === 1)!;
       refs.truck = truck;
       const near = truck.slots.filter((s) => s.id.includes('-D')).sort((a, b) => a.center.x - b.center.x);
-      const targets = [near[1], near[4], near[7]];
+      const targets = [near[2], near[4], near[6]];
       targets.forEach((s, i) => (refs.slots[`t${i}`] = s));
-      const xs = [-17.6, -14, -10.4];
+      const xs = [-16.2, -14, -11.8];
       const cargos = ['cemento', 'bebidas', 'cajas'];
-      xs.forEach((x, i) => (refs.pallets[`p${i}`] = world.addPallet({ cargo: cargos[i], mass: [900, 760, 380][i], position: V(x, 0.003, -23.6), yaw: Math.PI, sleeping: true })));
+      clearArea(world, V(-14, 0, -12.6), 4);
+      xs.forEach((x, i) => (refs.pallets[`p${i}`] = world.addPallet({ cargo: cargos[i], mass: [900, 760, 380][i], position: V(x, 0.003, -12.6), yaw: Math.PI, sleeping: true })));
     },
     steps: [
       {
-        text: 'Cargá los 3 pallets en el camión, del lado cercano, en los huecos marcados.',
-        hint: 'Tomá cada pallet, elevalo a más de 1,45 m ANTES de acercarte a la caja, entrá despacio y apoyalo.',
+        text: 'Llevá los 3 pallets de RECEPCIÓN al camión del patio y cargalos del lado cercano, en los huecos marcados.',
+        hint: 'Salí por el portón con la carga baja. Frente al camión: detenete, elevá a más de 1,45 m, entrá despacio y apoyá.',
         marker: (c) => {
           for (let i = 0; i < 3; i++) {
             const p = c.refs.pallets[`p${i}`];
@@ -355,17 +356,17 @@ export const LESSONS: Lesson[] = [
     start: { x: 6.5, z: -22.5, yawDeg: 90, engineOn: true },
     pedestrians: false,
     setup(world, refs) {
-      clearArea(world, V(22, 0, -37.5), 3, 0.8, 3);
+      clearArea(world, V(22, 0, -41), 7, 0.8, 3);
       refs.pallets.p = world.addPallet({ cargo: 'cemento', mass: 1100, position: V(12.6, 0.003, -22.5), yaw: Math.PI / 2, sleeping: true });
-      addZone(world, refs, 'destino', 'DESTINO', 22, 1.2, -37.3, 2.8, 3.0, 0x2e9b4e);
-      refs.zones.plataforma = { id: 'plataforma', label: '', center: V(22, 1.2, -36.5), width: 4.2, depth: 7, yaw: 0, color: 0, kind: 'meta' };
+      addZone(world, refs, 'destino', 'DESTINO', 19.2, 1.2, -43.6, 2.6, 2.6, 0x2e9b4e);
+      refs.zones.plataforma = { id: 'plataforma', label: '', center: V(22, 1.2, -41), width: 11, depth: 10, yaw: 0, color: 0, kind: 'meta' };
     },
     steps: [
       ...pickSteps('p'),
       {
         text: 'Subí la rampa DE FRENTE, con la carga del lado de arriba y sin girar.',
         hint: 'Alineate con la rampa ANTES de entrar. Acelerá parejo: con carga cuesta más subir.',
-        marker: () => V(22, 2.6, -28),
+        marker: () => V(22, 2.6, -31),
         check: (c) => c.fl.position.y > 1.0 && c.forkliftIn(c.refs.zones.plataforma) && c.carried(c.refs.pallets.p),
       },
       {
@@ -374,9 +375,9 @@ export const LESSONS: Lesson[] = [
         check: (c) => c.palletIn(c.refs.pallets.p, c.refs.zones.destino) && !c.touching(c.refs.pallets.p) && c.insertionGap(c.refs.pallets.p) > 0.6,
       },
       {
-        text: 'Sin carga, bajá la rampa DE FRENTE y despacio (horquillas hacia abajo de la pendiente).',
-        hint: 'Sin carga el peso está atrás: así el autoelevador es más estable en bajada.',
-        check: (c) => c.fl.position.y < 0.1 && c.fl.position.z > -23.5,
+        text: 'Sin carga, girá en la plataforma y bajá la rampa DE FRENTE y despacio (horquillas hacia abajo).',
+        hint: 'Subí las horquillas ~20 cm para que las puntas no toquen el piso al final de la rampa. Sin carga el peso está atrás: así es más estable en bajada.',
+        check: (c) => c.fl.position.y < 0.1 && c.fl.position.z > -26.5,
       },
       { text: 'Detenete y poné el freno de mano.', check: (c) => c.stopped() && c.c.parkingBrake, hold: 0.3 },
     ],

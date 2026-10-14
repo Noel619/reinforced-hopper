@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import type { World, Slot } from './World.ts';
-import { ground, building, rack, flatbedTruck, ramp, cone, zone, column, sign, fuelStation, paintLine, staticBox, type ConeEntity } from './builders.ts';
-import { materials } from '../render/materials.ts';
+import { ground, building, rack, flatbedTruck, ramp, cone, zone, column, sign, fuelStation, paintLine, type ConeEntity } from './builders.ts';
 import { PedestrianSystem } from './pedestrians.ts';
 import { CARGO_TYPES } from '../sim/pallet.ts';
 
@@ -55,8 +54,8 @@ export function buildPracticeCenter(world: World, opts: { pedestrians?: boolean 
   // Fila A contra la pared norte, mirando al sur
   const A = rack(world, { id: 1, name: 'A', origin: new THREE.Vector3(26, 0, 18.6), yaw: Math.PI, bays: 8, levels: [0, 1.5, 3.0], color: 'blue' });
   // Fila B/C doble (lomo con lomo). Pasillos de 4,4 m para autoelevadores contrapesados
-  const B2 = rack(world, { id: 2, name: 'B', origin: new THREE.Vector3(2.5, 0, 14.2), yaw: 0, bays: 8, levels: [0, 1.5, 3.0, 4.2], color: 'orange' });
-  const B1 = rack(world, { id: 3, name: 'C', origin: new THREE.Vector3(23.71, 0, 11.85), yaw: Math.PI, bays: 8, levels: [0, 1.5, 3.0, 4.2], color: 'orange' });
+  const B2 = rack(world, { id: 2, name: 'B', origin: new THREE.Vector3(2.5, 0, 14.2), yaw: 0, bays: 8, levels: [0, 1.5, 3.0, 4.5], color: 'orange' });
+  const B1 = rack(world, { id: 3, name: 'C', origin: new THREE.Vector3(23.71, 0, 11.85), yaw: Math.PI, bays: 8, levels: [0, 1.5, 3.0, 4.5], color: 'orange' });
   // carteles de pasillo
   sign(world, 'PASILLO 1', new THREE.Vector3(1.4, 4.2, 16.4), Math.PI / 2, 2.4, 0.6, { post: false });
   sign(world, 'PASILLO 2', new THREE.Vector3(1.4, 4.2, 9.8), Math.PI / 2, 2.4, 0.6, { post: false });
@@ -108,14 +107,11 @@ export function buildPracticeCenter(world: World, opts: { pedestrians?: boolean 
   });
   void t1;
   // rampa a plataforma elevada (pendiente ~13 %)
-  ramp(world, new THREE.Vector3(22, 0, -24), Math.PI, 9, 4.2, 1.2, 7);
-  // cordones en los bordes de la plataforma
-  for (const x of [19.98, 24.02]) staticBox(world, new THREE.Vector3(x, 1.2 + 0.08, -36.5), new THREE.Vector3(0.16, 0.16, 7), 0, materials().stripes, 'dock');
-  staticBox(world, new THREE.Vector3(22, 1.2 + 0.08, -39.92), new THREE.Vector3(4.2, 0.16, 0.16), 0, materials().stripes, 'dock');
-  sign(world, 'RAMPA 13%\nCARGA ARRIBA', new THREE.Vector3(25.2, 1.6, -24.5), Math.PI / 2 + 0.5, 1.6, 0.9, { bg: '#f2c200', fg: '#111', post: true });
+  ramp(world, new THREE.Vector3(22, 0, -27), Math.PI, 9, 4.2, 1.2, 10, 11);
+  sign(world, 'RAMPA 13%\nCARGA ARRIBA', new THREE.Vector3(25.4, 1.6, -27.5), Math.PI / 2 + 0.5, 1.6, 0.9, { bg: '#f2c200', fg: '#111', post: true });
   for (let i = 0; i < 3; i++) {
     const c = randomCargo(r, 1200);
-    world.addPallet({ cargo: c.cargo, mass: c.mass, position: new THREE.Vector3(20.6 + i * 1.4, 1.2 + 0.003, -37.5), yaw: 0, sleeping: true });
+    world.addPallet({ cargo: c.cargo, mass: c.mass, position: new THREE.Vector3(19.4 + i * 2.6, 1.2 + 0.003, -44.6), yaw: 0, sleeping: true });
   }
   // circuito de conos (slalom)
   const cones: ConeEntity[] = [];

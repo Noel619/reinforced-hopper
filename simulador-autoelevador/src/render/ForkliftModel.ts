@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { batchStatic } from './batch.ts';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { ForkliftSpec } from '../sim/specs.ts';
 import { computeGeometry, type ForkliftGeometry, type ForkliftControls, type ForkliftTelemetry, type WheelState } from '../sim/forklift.ts';
@@ -96,8 +97,8 @@ export class ForkliftModel {
   private forkMeshes: THREE.Group[] = [];
   private blueSpot: THREE.SpotLight | null = null;
   private blueSpotMarker: THREE.Mesh | null = null;
-  readonly cabOnly: THREE.Object3D[] = [];
   private highlight: THREE.Mesh | null = null;
+  private rimMats: Record<number, THREE.MeshStandardMaterial> = {};
 
   constructor(spec: ForkliftSpec) {
     this.spec = spec;
@@ -122,6 +123,37 @@ export class ForkliftModel {
         (o as THREE.Mesh).receiveShadow = true;
       }
     });
+    this.optimize();
+  }
+
+  /**
+   * Fusiona las piezas fijas de cada cuerpo por material (de ~200 mallas a unas pocas decenas).
+   * Las piezas animadas y los mandos de cabina quedan aparte; dentro de las que giran o se
+   * desplazan (ruedas, mástiles, horquillas) también se fusiona lo que es solidario.
+   */
+  private optimize() {
+    const moving: THREE.Object3D[] = [
+      ...this.frontWheels,
+      this.rearAxle,
+      ...this.rearKnuckles,
+      ...this.rearWheels,
+      this.steeringWheel,
+      this.innerMast,
+      this.intermediateMast,
+      this.beacon,
+      this.beltMesh,
+      ...this.liftRods,
+      ...this.chains,
+      ...this.forkMeshes,
+      ...this.tiltCyl.flatMap((t) => [t.barrel, t.rod]),
+    ];
+    for (const c of this.controls) moving.push(c.pivot, ...c.targets);
+    for (const o of Object.values(this.levers)) if (o) moving.push(o);
+    for (const o of Object.values(this.pedals)) if (o) moving.push(o);
+    const exclude = new Set(moving);
+    const except = (root: THREE.Object3D) => new Set([...exclude].filter((o) => o !== root));
+    for (const g of [...this.frontWheels, ...this.rearWheels, this.steeringWheel, this.innerMast, this.intermediateMast, ...this.forkMeshes]) batchStatic(g, except(g));
+    for (const g of [this.chassis, this.mast, this.carriage, this.forks]) batchStatic(g, exclude);
   }
 
   // ---------------------------------------------------------------- chasis
@@ -208,12 +240,13 @@ export class ForkliftModel {
     const gz0 = -wb * 0.95;
     const gz1 = 0.02;
     const px = W / 2 - 0.07;
+    const mirrorMat = new THREE.MeshStandardMaterial({ color: 0xc9d6e2, roughness: 0.05, metalness: 0.9 });
     for (const sx of [-1, 1]) {
       g.add(rod(new THREE.Vector3(sx * px, floorY + 0.35, -0.02), new THREE.Vector3(sx * px, gH, gz1), 0.035, M.darkMetal));
       g.add(rod(new THREE.Vector3(sx * px, 1.1, gz0 + 0.05), new THREE.Vector3(sx * px, gH, gz0), 0.035, M.darkMetal));
       // espejos
       const mirrorArm = rod(new THREE.Vector3(sx * px, gH - 0.25, gz1 - 0.01), new THREE.Vector3(sx * (px + 0.16), gH - 0.2, gz1 - 0.02), 0.008, M.darkMetal, false);
-      const mirror = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.015, 18), new THREE.MeshStandardMaterial({ color: 0xc9d6e2, roughness: 0.05, metalness: 0.9 }));
+      const mirror = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.015, 18), mirrorMat);
       mirror.rotation.x = Math.PI / 2;
       mirror.position.set(sx * (px + 0.19), gH - 0.19, gz1 - 0.02);
       g.add(mirrorArm, mirror);
@@ -330,16 +363,17 @@ export class ForkliftModel {
     this.registerControl('horn', [hornBtn], hornBtn, 'Bocina (mantener)');
     this.registerControl('wheel', [ring, knob], sw, 'Volante: arrastrá el pomo para girar');
 
-    // Palanca de marcha (izquierda de la columna)
+    // Palanca de marcha (en la columna, del lado izquierdo, asomando fuera del volante)
     const dirPivot = new THREE.Group();
-    dirPivot.position.set(0.07, s.seatHeight + 0.18, seatZ + 0.6);
-    const dirStick = rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.14, 0.02, 0), 0.008, M.chrome, false);
-    const dirKnob = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 10), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 }));
-    dirKnob.position.set(0.15, 0.02, 0);
+    const colAt = (t: number) => colBase.clone().lerp(wheelCenter, t);
+    dirPivot.position.copy(colAt(0.62)).add(new THREE.Vector3(0.03, 0, 0));
+    const dirStick = rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.2, 0.03, 0.01), 0.009, M.chrome, false);
+    const dirKnob = new THREE.Mesh(new THREE.SphereGeometry(0.026, 12, 10), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 }));
+    dirKnob.position.set(0.21, 0.03, 0.01);
     dirPivot.add(dirStick, dirKnob);
     g.add(dirPivot);
     this.levers.direction = dirPivot;
-    this.registerControl('direction', [dirKnob, dirStick], dirPivot, 'Palanca de marcha F / N / R (arrastrar arriba/abajo)');
+    this.registerControl('direction', [dirKnob, dirStick], dirPivot, 'Palanca de marcha F / N / R (arrastrar arriba = adelante, abajo = atrás)');
 
     // Palancas hidráulicas (a la derecha)
     const leverDefs: { id: CabControlId; color: number; label: string; icon: string }[] = [
@@ -373,19 +407,21 @@ export class ForkliftModel {
       this.registerControl(d.id, [kn, stick], pivot, d.label);
     });
 
-    // Llave de contacto
+    // Llave de contacto (sobre el tablero, a la derecha)
+    const keyPlate = box(0.09, 0.012, 0.09, M.black, -0.36, cowlTop + 0.04, -0.2);
+    g.add(keyPlate);
     const keyPivot = new THREE.Group();
-    keyPivot.position.set(-0.3, cowlTop - 0.06, -0.3);
-    keyPivot.rotation.x = -Math.PI / 2 + 0.4;
-    const keyBarrel = cyl(0.025, 0.03, M.chrome);
-    const keyHead = box(0.05, 0.012, 0.025, new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 }), 0, 0.03, 0);
+    keyPivot.position.set(-0.36, cowlTop + 0.05, -0.2);
+    const keyBarrel = cyl(0.03, 0.02, M.chrome);
+    const keyHead = box(0.07, 0.04, 0.014, new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.4 }), 0, 0.04, 0);
+    keyHead.rotation.x = -0.35;
     keyPivot.add(keyBarrel, keyHead);
     g.add(keyPivot);
     this.levers.key = keyPivot;
-    this.registerControl('key', [keyBarrel, keyHead], keyPivot, 'Llave de contacto: clic para arrancar / apagar');
+    this.registerControl('key', [keyHead, keyBarrel], keyPivot, 'Llave de contacto: clic para arrancar / apagar (con la palanca en N)');
 
     // Interruptor de luces
-    const lightSw = box(0.04, 0.025, 0.02, new THREE.MeshStandardMaterial({ color: 0x3355aa, roughness: 0.4 }), 0.22, cowlTop + 0.045, -0.3);
+    const lightSw = box(0.05, 0.03, 0.03, new THREE.MeshStandardMaterial({ color: 0x3355aa, roughness: 0.4 }), -0.27, cowlTop + 0.055, -0.13);
     g.add(lightSw);
     this.levers.lights = lightSw;
     this.registerControl('lights', [lightSw], lightSw, 'Luces de trabajo (clic)');
@@ -448,7 +484,7 @@ export class ForkliftModel {
       lug.rotation.x = a;
       treadGroup.add(lug);
     }
-    const rimMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.45, metalness: 0.3 });
+    const rimMat = (this.rimMats[rimColor] ??= new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.45, metalness: 0.3 }));
     const rim = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.55, radius * 0.55, width + 0.01, 18), rimMat);
     rim.rotation.z = Math.PI / 2;
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.2, radius * 0.2, width + 0.03, 10), M.darkMetal);
@@ -663,7 +699,7 @@ export class ForkliftModel {
     const d = this.levers.direction;
     if (d) d.rotation.z = c.direction * 0.35;
     const key = this.levers.key;
-    if (key) key.rotation.y = c.ignition ? -0.9 : 0;
+    if (key) key.rotation.y = c.ignition ? -1.2 : 0;
     const pb = this.levers.parking;
     if (pb) pb.rotation.x = c.parkingBrake ? 0.0 : 0.6;
     const ls = this.levers.lights;

@@ -99,7 +99,7 @@ export const SHOP: ShopItem[] = [
   { id: 'desplazador', category: 'accesorio', name: 'Desplazador lateral', description: 'Agrega desplazador lateral al Toro 15 (los demás modelos ya lo traen).', price: 3500 },
   { id: 'rack2', category: 'instalacion', name: 'Estantería norte · módulo 2', description: '+24 posiciones (3 niveles hasta 3,0 m).', price: 6000 },
   { id: 'rack3', category: 'instalacion', name: 'Estantería norte · módulo 3', description: '+24 posiciones (3 niveles hasta 3,0 m).', price: 7500, requires: ['rack2'] },
-  { id: 'rack4', category: 'instalacion', name: 'Estantería central doble · módulo A', description: '+64 posiciones en 4 niveles (el último a 4,2 m: requiere mástil alto).', price: 14000 },
+  { id: 'rack4', category: 'instalacion', name: 'Estantería central doble · módulo A', description: '+64 posiciones en 4 niveles (el último a 4,5 m: requiere mástil alto).', price: 14000 },
   { id: 'rack5', category: 'instalacion', name: 'Estantería central doble · módulo B', description: '+64 posiciones en 4 niveles.', price: 15000, requires: ['rack4'] },
   { id: 'rack6', category: 'instalacion', name: 'Estantería central doble · módulo C', description: '+64 posiciones en 4 niveles.', price: 16000, requires: ['rack5'] },
   { id: 'bahia3', category: 'instalacion', name: 'Tercera bahía de camiones', description: 'Permite atender más camiones por día.', price: 8000 },

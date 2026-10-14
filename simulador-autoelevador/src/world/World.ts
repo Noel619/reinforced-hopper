@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import { batchStatic } from '../render/batch.ts';
 import { RAPIER, createPhysicsWorld, type PhysicsWorld } from '../sim/physics.ts';
 import { PalletBody, type PalletType } from '../sim/pallet.ts';
 import { ForkliftPhysics } from '../sim/forklift.ts';
 import type { ForkliftSpec } from '../sim/specs.ts';
 import { ForkliftModel } from '../render/ForkliftModel.ts';
-import { buildPalletMesh } from './palletView.ts';
+import { palletParts } from './palletView.ts';
+import { PalletInstancer, type PartRef } from './palletInstances.ts';
 import type { PedestrianSystem } from './pedestrians.ts';
 
 export interface PalletMeta {
@@ -24,7 +26,10 @@ export interface PalletMeta {
 export interface PalletEntity {
   id: number;
   phys: PalletBody;
-  mesh: THREE.Group;
+  /** Transformación visual (interpolada); se dibuja con el instanciador. */
+  mesh: THREE.Object3D;
+  /** Instancias de sus piezas visuales. */
+  parts: PartRef[];
   meta: PalletMeta;
   prevPos: THREE.Vector3;
   prevQuat: THREE.Quaternion;
@@ -86,6 +91,8 @@ export class World {
   readonly pw: PhysicsWorld;
   readonly staticGroup = new THREE.Group();
   readonly dynamicGroup = new THREE.Group();
+  /** Todos los pallets se dibujan instanciados (una llamada por tipo de pieza). */
+  readonly palletGfx = new PalletInstancer();
   readonly pallets = new Map<number, PalletEntity>();
   /** Pallet por handle de cuerpo rígido. */
   readonly palletByBody = new Map<number, PalletEntity>();
@@ -108,6 +115,21 @@ export class World {
     this.scene = new THREE.Scene();
     this.pw = createPhysicsWorld(1 / 120);
     this.scene.add(this.staticGroup, this.dynamicGroup);
+    this.dynamicGroup.add(this.palletGfx.group);
+  }
+
+  /**
+   * Fusiona la geometría estática del escenario por material (menos llamadas de dibujo).
+   * Se llama una vez construido el escenario; los camiones quedan aparte porque se quitan y agregan.
+   */
+  optimizeStatic() {
+    const exclude = new Set<THREE.Object3D>(this.trucks.map((t) => t.group));
+    const merged = batchStatic(this.staticGroup, exclude);
+    // los oclusores originales que se fusionaron ya no están en la escena: usar las mallas fusionadas
+    const keep = this.occluders.filter((o) => o.parent);
+    this.occluders.length = 0;
+    this.occluders.push(...keep, ...merged.filter((m) => m.userData.occluder));
+    return merged.length;
   }
 
   // ----------------------------------------------------------- autoelevador
@@ -156,12 +178,12 @@ export class World {
     label?: { text: string; color: string };
   }): PalletEntity {
     const id = this.nextPalletId++;
-    const phys = new PalletBody(this.pw, { id, type: opts.type ?? 'eur', cargo: opts.cargo, cargoMass: opts.mass, position: opts.position, yaw: opts.yaw });
-    if (opts.sleeping) phys.body.sleep();
-    const mesh = buildPalletMesh(phys.type.id, phys.cargo, phys.cargoSize, opts.label);
+    const phys = new PalletBody(this.pw, { id, type: opts.type ?? 'eur', cargo: opts.cargo, cargoMass: opts.mass, position: opts.position, yaw: opts.yaw, sleeping: opts.sleeping });
+    const mesh = new THREE.Object3D();
     mesh.position.copy(opts.position);
     mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), opts.yaw);
-    this.dynamicGroup.add(mesh);
+    mesh.updateMatrix();
+    const parts = this.palletGfx.add(palletParts(phys.type.id, phys.cargo, phys.cargoSize, opts.label), mesh.matrix);
     const meta: PalletMeta = {
       value: phys.cargoMass * phys.cargo.valuePerKg,
       damage: 0,
@@ -172,6 +194,7 @@ export class World {
       id,
       phys,
       mesh,
+      parts,
       meta,
       prevPos: opts.position.clone(),
       prevQuat: mesh.quaternion.clone(),
@@ -190,7 +213,7 @@ export class World {
     if (!e) return;
     this.palletByBody.delete(e.phys.body.handle);
     e.phys.destroy(this.pw);
-    this.dynamicGroup.remove(e.mesh);
+    this.palletGfx.remove(e.parts);
     this.pallets.delete(id);
   }
 
@@ -259,6 +282,8 @@ export class World {
       if (!e.awake && e.mesh.position.equals(e.curPos)) continue;
       e.mesh.position.lerpVectors(e.prevPos, e.curPos, e.awake ? alpha : 1);
       e.mesh.quaternion.slerpQuaternions(e.prevQuat, e.curQuat, e.awake ? alpha : 1);
+      e.mesh.updateMatrix();
+      this.palletGfx.setMatrix(e.parts, e.mesh.matrix);
     }
   }
 
@@ -318,6 +343,7 @@ export class World {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();
     });
+    this.palletGfx.dispose();
     this.pw.world.free();
     this.pw.events.free();
   }

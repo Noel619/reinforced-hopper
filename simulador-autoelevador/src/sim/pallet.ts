@@ -84,6 +84,8 @@ export interface PalletOptions {
   position: THREE.Vector3;
   yaw: number;
   id: number;
+  /** Crear dormido (apoyado en su lugar, sin asentarse hasta que algo lo toque). */
+  sleeping?: boolean;
 }
 
 /** Datos de un pallet físico en el mundo. */
@@ -116,7 +118,8 @@ export class PalletBody {
       .setRotation({ x: q.x, y: q.y, z: q.z, w: q.w })
       .setLinearDamping(0.05)
       .setAngularDamping(0.15)
-      .setCcdEnabled(true);
+      .setCcdEnabled(true)
+      .setSleeping(!!opts.sleeping);
     this.body = pw.world.createRigidBody(desc);
 
     const blockMass = (pt.mass * 0.4) / 9;

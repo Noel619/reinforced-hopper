@@ -250,6 +250,7 @@ export class ForkliftPhysics {
   private dirPrev: -1 | 0 | 1 = 0;
   private prevVel = new THREE.Vector3();
   private accelSmoothed = new THREE.Vector3();
+  private latSmoothed = 0;
   private forkLoadKg = 0;
   private forkLoadSmoothed = 0;
   private loadCentroidLocal = new THREE.Vector3();
@@ -1393,7 +1394,13 @@ export class ForkliftPhysics {
     this.accelSmoothed.lerp(acc, 1 - Math.exp(-dt / 0.2));
     const accLocal = this.accelSmoothed.clone().applyQuaternion(qc.clone().invert());
     t.accelLong = accLocal.z;
-    t.accelLat = accLocal.x;
+    // aceleración lateral centrípeta (v·ω): lo que empuja al vuelco lateral en una curva
+    const av = this.chassis.angvel();
+    const upW = new THREE.Vector3(0, 1, 0).applyQuaternion(qc);
+    const yawRate = av.x * upW.x + av.y * upW.y + av.z * upW.z;
+    const aLat = t.speed * yawRate;
+    this.latSmoothed += (aLat - this.latSmoothed) * (1 - Math.exp(-dt / 0.15));
+    t.accelLat = this.latSmoothed;
 
     // Inclinación del chasis
     const upC = new THREE.Vector3(0, 1, 0).applyQuaternion(qc);
