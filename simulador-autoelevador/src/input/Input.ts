@@ -102,7 +102,13 @@ export class Input {
 
   /** Lee el gamepad (llamar al principio de cada cuadro). */
   poll() {
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    // dentro de un iframe sin permiso de gamepad, getGamepads() lanza un error: seguir sin joystick
+    let pads: (Gamepad | null)[] = [];
+    try {
+      pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    } catch {
+      pads = [];
+    }
     let pad: Gamepad | null = null;
     for (const p of pads) if (p && p.connected) {
       pad = p;
