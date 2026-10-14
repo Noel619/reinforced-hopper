@@ -225,6 +225,7 @@ export class Session {
     }
     if (ui.forkCam && this.hasAccessory('camara')) this.pip = !this.pip;
     if (ui.resetView) this.rig.resetView();
+    if (ui.lookX || ui.lookY) this.rig.lookRate(-ui.lookX * 2.2, -ui.lookY * 1.6, dt);
     if (ui.resetForklift) this.resetForklift();
 
     // ratón: mandos de cabina o mirada

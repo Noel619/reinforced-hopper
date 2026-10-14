@@ -93,8 +93,10 @@ export function helpScreen(onClose: () => void): HTMLDivElement {
       <tr><td><span class="pad">△</span></td><td>Cambiar cámara</td></tr>
       <tr><td><span class="pad">L3</span></td><td>Cinturón de seguridad</td></tr>
       <tr><td><span class="pad">D-pad ←</span></td><td>Luces</td></tr>
-      <tr><td><span class="pad">D-pad → / R3</span></td><td>Mantener: mirar hacia atrás</td></tr>
+      <tr><td><span class="pad">R3 mantenido + stick der.</span></td><td>Mirar alrededor (en cabina) u orbitar la cámara · toque de R3: centrar la vista</td></tr>
+      <tr><td><span class="pad">D-pad →</span></td><td>Mantener: mirar hacia atrás</td></tr>
       <tr><td><span class="pad">Options · Share</span></td><td>Pausa · Ayuda</td></tr>
+      <tr><td><span class="pad">Menús</span></td><td>Cruceta o stick izq. para moverte · ✕ aceptar · ○ volver</td></tr>
       </table>
       <p class="note">Funciona con DualShock 4, DualSense y mandos Xbox conectados por USB o Bluetooth. Si no responde, apretá cualquier botón del mando con la ventana enfocada.</p>`,
     'Ratón en cabina': `

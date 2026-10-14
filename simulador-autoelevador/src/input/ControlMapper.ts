@@ -33,6 +33,9 @@ export interface UiActions {
   map: boolean;
   spawnMenu: boolean;
   resetForklift: boolean;
+  /** Mirar con el joystick (mantener R3 + stick derecho): velocidades −1..1. */
+  lookX: number;
+  lookY: number;
 }
 
 const approach = (v: number, target: number, rate: number, dt: number) => {
@@ -53,6 +56,9 @@ export class ControlMapper {
   /** Posición del volante impuesta por el ratón (arrastrando el pomo). */
   mouseHandwheel: number | null = null;
   mouseHorn = false;
+  /** R3 mantenido: el stick derecho mueve la cámara en lugar de la hidráulica. */
+  private r3Look = false;
+  private r3Moved = false;
   /** Bloquea los mandos de conducción (menús abiertos, etc.). */
   locked = false;
   /** Los mandos los maneja un programa externo (pruebas automáticas). */
@@ -64,14 +70,27 @@ export class ControlMapper {
       cameraNext: input.keyPressed('KeyC') || input.padPressedNow(PAD.TRIANGLE),
       pause: input.keyPressed('Escape') || input.keyPressed('KeyP') || input.padPressedNow(PAD.OPTIONS),
       help: input.keyPressed('F1') || input.padPressedNow(PAD.SHARE),
-      lookBack: input.key('KeyV') || input.pad(PAD.RIGHT) > 0.5 || input.pad(PAD.R3) > 0.5,
+      lookBack: input.key('KeyV') || input.pad(PAD.RIGHT) > 0.5,
       lookLeft: false,
       resetView: input.keyPressed('Home'),
+      lookX: 0,
+      lookY: 0,
       forkCam: input.keyPressed('KeyG'),
       map: input.keyPressed('KeyM'),
       spawnMenu: input.keyPressed('KeyN'),
       resetForklift: input.keyPressed('Backspace'),
     };
+    // R3 mantenido + stick derecho = mirar; un toque de R3 centra la vista
+    this.r3Look = input.pad(PAD.R3) > 0.5;
+    if (this.r3Look) {
+      ui.lookX = input.axis(2, 0.15);
+      ui.lookY = input.axis(3, 0.15);
+      if (ui.lookX || ui.lookY) this.r3Moved = true;
+    }
+    if (input.padReleasedNow(PAD.R3)) {
+      if (!this.r3Moved) ui.resetView = true;
+      this.r3Moved = false;
+    }
     if (this.external) return ui;
     if (this.locked) {
       c.throttle = 0;
@@ -157,8 +176,8 @@ export class ControlMapper {
     const kTilt = keyLever('tilt', input.key('KeyR'), input.key('KeyF'));
     const kShift = keyLever('shift', input.key('ArrowLeft'), input.key('ArrowRight'));
     const kSpread = keyLever('spread', input.key('KeyX'), input.key('KeyZ'));
-    const pLift = -input.axis(3, 0.15);
-    const pTilt = (this.settings.invertTilt ? 1 : -1) * input.axis(2, 0.2);
+    const pLift = this.r3Look ? 0 : -input.axis(3, 0.15);
+    const pTilt = this.r3Look ? 0 : (this.settings.invertTilt ? 1 : -1) * input.axis(2, 0.2);
     const pShift = input.pad(PAD.L1) - input.pad(PAD.R1);
     const pSpread = fl.spec.forkPositioner ? -input.axis(1, 0.5) : 0;
     const pick = (id: LeverId, k: number, p: number) => {

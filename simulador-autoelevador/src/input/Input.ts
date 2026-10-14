@@ -76,6 +76,8 @@ export class Input {
       this.mouseX = e.clientX - r.left;
       this.mouseY = e.clientY - r.top;
     });
+    // un clic en los menús (overlay) también indica que se usa el ratón
+    window.addEventListener('pointerdown', () => (this.lastDevice = 'teclado'), true);
     element.addEventListener('pointerdown', (e) => {
       const bit = 1 << e.button;
       this.mouseButtons |= bit;

@@ -119,7 +119,114 @@ export class App {
       this.renderMenuScene();
     }
     this.updatePadInfo();
+    this.padNavigate(dt);
     this.input.endFrame();
+  }
+
+  // ------------------------------------------------------------------ menús con joystick
+  private padFocus: HTMLElement | null = null;
+  private padRepeat = 0;
+
+  /** Menús con el joystick: cruceta o stick izquierdo mueven el foco, ✕ acepta y ◯ vuelve. */
+  private padNavigate(dt: number) {
+    const inp = this.input;
+    const top = this.screens[this.screens.length - 1];
+    if (!top || !inp.padConnected) {
+      this.setPadFocus(null);
+      return;
+    }
+    const items = [...top.querySelectorAll<HTMLElement>('button, select, input')].filter(
+      (e) => !(e as HTMLButtonElement).disabled && e.offsetParent !== null && e.getClientRects().length > 0,
+    );
+    if (!items.length) return;
+    let f = this.padFocus;
+    if (!f || !items.includes(f)) {
+      // primer foco: el botón principal (si lo hay)
+      f = items.find((e) => e.classList.contains('primary')) ?? items[0];
+      this.setPadFocus(f);
+    }
+    // dirección: cruceta (un paso) o stick izquierdo (con repetición)
+    let dir: [number, number] | null = null;
+    if (inp.padPressedNow(PAD.UP)) dir = [0, -1];
+    else if (inp.padPressedNow(PAD.DOWN)) dir = [0, 1];
+    else if (inp.padPressedNow(PAD.LEFT)) dir = [-1, 0];
+    else if (inp.padPressedNow(PAD.RIGHT)) dir = [1, 0];
+    const ax = inp.axis(0, 0.5);
+    const ay = inp.axis(1, 0.5);
+    if (ax || ay) {
+      this.padRepeat -= dt;
+      if (!dir && this.padRepeat <= 0) {
+        dir = Math.abs(ax) > Math.abs(ay) ? [Math.sign(ax), 0] : [0, Math.sign(ay)];
+        this.padRepeat = 0.25;
+      }
+    } else this.padRepeat = 0;
+    if (dir) {
+      const valueCtl = (f instanceof HTMLInputElement && f.type === 'range') || f instanceof HTMLSelectElement;
+      if (valueCtl && dir[1] === 0) this.padAdjust(f as HTMLInputElement | HTMLSelectElement, dir[0]);
+      else {
+        const next = this.padNext(items, f, dir);
+        if (next) this.setPadFocus(next);
+      }
+    }
+    if (inp.padPressedNow(PAD.CROSS)) {
+      if (f instanceof HTMLSelectElement) this.padAdjust(f, 1, true);
+      else if (!(f instanceof HTMLInputElement && f.type === 'range')) f.click();
+    } else if (inp.padPressedNow(PAD.CIRCLE)) {
+      if (top.classList.contains('pause-screen')) this.closePause();
+      else {
+        const back = [...top.querySelectorAll<HTMLButtonElement>('.screen-footer button')].find((b) => /^(volver|cerrar|cancelar|listo)/i.test(b.textContent?.trim() ?? ''));
+        back?.click();
+      }
+    }
+  }
+
+  private setPadFocus(e: HTMLElement | null) {
+    if (this.padFocus === e) {
+      this.padFocus?.classList.toggle('pad-focus', this.input.lastDevice === 'gamepad');
+      return;
+    }
+    this.padFocus?.classList.remove('pad-focus');
+    this.padFocus = e;
+    if (e) {
+      e.classList.toggle('pad-focus', this.input.lastDevice === 'gamepad');
+      e.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }
+
+  /** El elemento más cercano en la dirección pedida (navegación espacial). */
+  private padNext(items: HTMLElement[], from: HTMLElement, [dx, dy]: [number, number]): HTMLElement | null {
+    const r0 = from.getBoundingClientRect();
+    const x0 = r0.left + r0.width / 2;
+    const y0 = r0.top + r0.height / 2;
+    let best: HTMLElement | null = null;
+    let bestScore = Infinity;
+    for (const e of items) {
+      if (e === from) continue;
+      const r = e.getBoundingClientRect();
+      const vx = r.left + r.width / 2 - x0;
+      const vy = r.top + r.height / 2 - y0;
+      const along = vx * dx + vy * dy;
+      if (along <= 4) continue;
+      const across = Math.abs(dx !== 0 ? vy : vx);
+      const score = along + across * 2.5;
+      if (score < bestScore) {
+        bestScore = score;
+        best = e;
+      }
+    }
+    return best;
+  }
+
+  private padAdjust(f: HTMLInputElement | HTMLSelectElement, d: number, wrap = false) {
+    if (f instanceof HTMLSelectElement) {
+      const n = f.options.length;
+      let i = f.selectedIndex + d;
+      i = wrap ? (i + n) % n : Math.max(0, Math.min(n - 1, i));
+      f.selectedIndex = i;
+    } else if (d > 0) f.stepUp();
+    else f.stepDown();
+    f.dispatchEvent(new Event('input', { bubbles: true }));
+    f.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   // ------------------------------------------------------------------ menú principal
