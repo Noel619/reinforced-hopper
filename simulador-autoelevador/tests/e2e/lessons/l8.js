@@ -1,0 +1,63 @@
+const ctx = AP.s().mode.ctx;
+const N = 0, S = Math.PI, W = -Math.PI / 2;
+// peatones quietos para que la prueba sea determinista
+for (const p of AP.s().world.peds.list) p.speed = 0;
+const honk = async () => { c.horn = true; await AP.frames(8); c.horn = false; };
+c.seatbelt = true; await AP.frames(5);
+c.ignition = true; await AP.until(() => T.engineRunning, 10, 'engine');
+c.parkingBrake = false; c.direction = 1; await AP.frames(5);
+AP.lift = 0.06;
+// 1) pallet de recepción (entrar desde el sur, mirando al norte)
+const rec = refs.pallets.rec;
+await AP.goPath([{ x: -8.2, z: -4.8 }, { x: -9.6, z: -3.5 }, { x: -12.4, z: -3.5 }, { x: -14, z: -5.4 }, { x: -14, z: -8.2 }, AP.axleFor(-14, -12.02, S)], { speed: 0.7, arrive: 0.03, lookahead: 1.0 });
+await AP.liftTo(0.2); await AP.tiltTo(3);
+log('rec tomado', JSON.stringify(AP.lessonState()), ctx.carried(rec));
+await AP.goPath([{ x: -14, z: -5.0 }], { reverse: true, speed: 0.6, arrive: 0.1 });
+AP.manual = true;
+await AP.until(() => { c.brake = 0; c.inching = 0.2; c.throttle = 0.3; c.handwheel = -1; c.direction = 1; c.parkingBrake = false; return Math.abs(Math.atan2(Math.sin(AP.fl().yaw), Math.cos(AP.fl().yaw))) < 0.3; }, 40, 'pivot1');
+AP.manual = false;
+// 2) llevarlo al rack C nivel 2 (s2)
+const s2 = refs.slots.s2;
+await honk();
+await AP.goPath([{ x: -12.5, z: -1.5 }, { x: s2.center.x - 3, z: 4.0 }, { x: s2.center.x, z: 6.0 }, AP.axleFor(s2.center.x, 9.4, N)], { speed: 1.2, arrive: 0.05, lookahead: 1.5 });
+await AP.frames(30);
+await AP.liftTo(s2.center.y + 0.2, 0.01);
+await AP.goPath([AP.axleFor(s2.center.x, s2.center.z - 0.6, N)], { speed: 0.3, arrive: 0.02 });
+await AP.tiltTo(0);
+await AP.liftTo(s2.center.y + 0.065, 0.006);
+await AP.frames(30);
+await AP.goPath([AP.axleFor(s2.center.x, s2.center.z - 0.6 - 1.35, N)], { reverse: true, speed: 0.3, arrive: 0.04 });
+await AP.liftTo(0.15, 0.03);
+log('rec estibado', JSON.stringify(AP.lessonState()));
+// 3) retirar el pallet alto (s3) y llevarlo a DESPACHO
+const s3 = refs.slots.s3;
+const alto = refs.pallets.alto;
+await AP.goPath([{ x: s2.center.x, z: 7.0 }, { x: s3.center.x - 0.6, z: 4.6 }], { reverse: true, speed: 0.5, arrive: 0.1, lookahead: 1.2 });
+await AP.goPath([{ x: s3.center.x, z: 7.0 }, AP.axleFor(s3.center.x, 10.1, N)], { speed: 0.5, arrive: 0.03, lookahead: 1.0 });
+await AP.liftTo(s3.center.y + 0.07, 0.006, 40);
+await AP.frames(40);
+await AP.goPath([AP.axleFor(s3.center.x, s3.center.z - 0.6 + 0.005, N)], { speed: 0.25, arrive: 0.015 });
+await AP.liftTo(s3.center.y + 0.16, 0.01);
+await AP.tiltTo(3);
+await AP.goPath([AP.axleFor(s3.center.x, 9.0, N)], { reverse: true, speed: 0.35, arrive: 0.05 });
+await AP.liftTo(0.22, 0.02, 40);
+log('alto bajado', JSON.stringify(AP.lessonState()), ctx.carried(alto));
+await AP.goPath([{ x: s3.center.x, z: 7.0 }], { reverse: true, speed: 0.5, arrive: 0.1 });
+AP.manual = true;
+await AP.until(() => { c.brake = 0; c.inching = 0.2; c.throttle = 0.3; c.handwheel = -1; c.direction = 1; return Math.abs(Math.atan2(Math.sin(AP.fl().yaw - Math.PI), Math.cos(AP.fl().yaw - Math.PI))) < 0.3; }, 40, 'pivot');
+AP.manual = false;
+log('girado', JSON.stringify(AP.lessonState()), (AP.fl().yaw * 57.3).toFixed(0));
+await honk();
+await AP.goPath([{ x: 6.0, z: 3.0 }, { x: 8, z: -3.0 }, AP.axleFor(8, -11.4, S)], { speed: 1.0, arrive: 0.05, lookahead: 1.5 });
+await AP.tiltTo(0);
+await AP.liftTo(0.06, 0.012);
+await AP.frames(30);
+await AP.goPath([{ x: 8, z: -8.6 }], { reverse: true, speed: 0.4, arrive: 0.1 });
+log('despachado', JSON.stringify(AP.lessonState()));
+// 4) estacionar en la zona de carga mirando al oeste
+await AP.goPath([{ x: 6.5, z: -13.5 }, { x: 2, z: -16.6 }, { x: -18, z: -16.0 }, { x: -22, z: -14.3 }, AP.axleFor(-25.9 - 0.48, -14.2, W)], { speed: 1.2, arrive: 0.08, lookahead: 1.6 });
+AP.lift = 0.055;
+await AP.frames(60);
+c.direction = 0; c.parkingBrake = true; await AP.frames(10);
+c.ignition = false;
+await AP.frames(60);

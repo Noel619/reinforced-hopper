@@ -1243,3 +1243,14 @@ input[type='checkbox'] {
   outline-offset: 3px;
   box-shadow: 0 0 0 6px rgba(255, 212, 0, 0.25);
 }
+
+.touch-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(242, 183, 5, 0.12);
+  border: 1px solid rgba(242, 183, 5, 0.45);
+  color: #ffe08a;
+  font-size: 13px;
+  line-height: 1.4;
+}

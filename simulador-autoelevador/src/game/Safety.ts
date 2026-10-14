@@ -22,7 +22,7 @@ const MESSAGES: Record<ViolationRule, string> = {
   inclinacion_adelante: 'No circules con el mástil inclinado hacia adelante y carga.',
   sobrecarga: 'Sobrecarga: la carga supera la capacidad a esta altura.',
   inversion_marcha: 'No cambies de marcha con el autoelevador en movimiento.',
-  mirar_atras: 'Mirá hacia atrás cuando vas en reversa (V / R3).',
+  mirar_atras: 'Mirá hacia atrás cuando vas en reversa (V / cruceta →).',
   freno_mano: 'Estás acelerando con el freno de mano puesto.',
   rampa_carga: 'En rampas, la carga debe ir del lado de arriba.',
   rampa_giro: 'No gires sobre una rampa.',

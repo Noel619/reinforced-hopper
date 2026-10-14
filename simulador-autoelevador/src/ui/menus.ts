@@ -44,6 +44,9 @@ export function mainMenu(h: MainMenuHandlers, padInfo: string): HTMLDivElement {
   const pad = el('div', 'pad-info', padInfo);
   pad.id = 'pad-info';
   box.append(logo, cards, row, pad);
+  // en un teléfono o tableta sin teclado ni ratón: avisar cómo se juega
+  const touchOnly = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches;
+  if (touchOnly) box.append(el('div', 'touch-note', 'Este simulador se maneja con teclado y ratón o con un joystick (PlayStation/Xbox). En un teléfono podés conectar un mando por Bluetooth.'));
   root.append(box);
   return root;
 }

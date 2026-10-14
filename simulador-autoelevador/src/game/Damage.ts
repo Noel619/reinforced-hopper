@@ -49,8 +49,15 @@ export class DamageMonitor {
           if (force < 60000) return;
           what = 'other';
         } else if (other.what === 'rack') what = 'rack';
-        else if (other.what === 'truck') what = 'truck';
-        else what = 'wall';
+        else if (other.what === 'truck') {
+          // horquillas o carro apoyando/raspando la caja del camión al cargar o descargar: sólo golpes fuertes.
+          // Un choque real (mástil o chasis contra el camión) empuja en horizontal.
+          if (fork.part === 'forks' || fork.part === 'carriage') {
+            const d = ev.maxForceDirection();
+            if (Math.abs(d.y) > 0.6 && force < 60000) return;
+          }
+          what = 'truck';
+        } else what = 'wall';
         id = other.id;
       } else if (other.kind === 'pallet') {
         // empujar un pallet es normal; sólo golpes fuertes cuentan

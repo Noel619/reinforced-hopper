@@ -1,0 +1,13 @@
+c.seatbelt = true; await AP.frames(5);
+c.ignition = true; await AP.until(() => T.engineRunning, 10, 'engine');
+c.parkingBrake = false; await AP.frames(3);
+c.direction = 1; await AP.frames(3);
+c.horn = true; await AP.frames(10); c.horn = false;
+await AP.goTo(-8, 5.7, { speed: 1.6, arrive: 0.5 });
+log('en zona verde', JSON.stringify(AP.lessonState()));
+await AP.frames(60);
+c.direction = -1; await AP.frames(5);
+c.horn = true; await AP.frames(10); c.horn = false;
+await AP.goTo(-8, -9.9, { reverse: true, speed: 1.4, arrive: 0.5 });
+c.direction = 0; c.parkingBrake = true; await AP.frames(10);
+c.ignition = false; await AP.frames(20);

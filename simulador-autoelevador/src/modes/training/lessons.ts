@@ -91,7 +91,7 @@ export const LESSONS: Lesson[] = [
       { text: 'Frená y detenete dentro de la zona verde.', hint: 'S / L2. Frená progresivamente.', check: (c) => c.forkliftIn(c.refs.zones.meta) && c.stopped(), hold: 0.6 },
       {
         text: 'Poné MARCHA ATRÁS, mirá hacia atrás y retrocedé hasta la zona azul.',
-        hint: 'Q / D-pad ↓. Mantené V (o R3) para girar la cabeza: en reversa siempre se mira hacia atrás.',
+        hint: 'Q / D-pad ↓. Mantené V (o la cruceta →) para girar la cabeza: en reversa siempre se mira hacia atrás.',
         marker: (c) => zoneMarker(c.refs.zones.retorno),
         check: (c) => c.forkliftIn(c.refs.zones.retorno) && c.c.direction === -1,
       },
@@ -139,7 +139,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         text: 'Estacioná MARCHA ATRÁS dentro del box azul, derecho y con las horquillas hacia afuera.',
-        hint: 'Pasate del box, frená, poné reversa y girá. Mirá hacia atrás (V / R3).',
+        hint: 'Pasate del box, frená, poné reversa y girá. Mirá hacia atrás (V / cruceta →).',
         marker: (c) => zoneMarker(c.refs.zones.box),
         check: (c) => c.forkliftFullyIn(c.refs.zones.box) && c.yawDiffDeg(0) < 10,
       },

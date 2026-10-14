@@ -165,7 +165,7 @@ export function dayEndScreen(app: App, state: BusinessState, report: { day: numb
   const grouped = new Map<string, number>();
   for (const l of report.lines) grouped.set(l.text, (grouped.get(l.text) ?? 0) + l.amount);
   const lines = [...grouped.entries()]
-    .map(([t, a]) => `<tr><td>${escapeHtml(t)}</td><td class="${a >= 0 ? 'good' : 'bad'}">${a >= 0 ? '+' : '−'}${money(Math.abs(a))}</td></tr>`)
+    .map(([t, a]) => `<tr><td>${escapeHtml(t)}</td>${a === 0 ? '<td class="dim">— (reputación)</td>' : `<td class="${a > 0 ? 'good' : 'bad'}">${a > 0 ? '+' : '−'}${money(Math.abs(a))}</td>`}</tr>`)
     .join('');
   const net = report.income - report.expenses;
   const html = `${statsHtml(state)}
